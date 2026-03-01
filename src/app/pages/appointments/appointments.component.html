@@ -1,0 +1,103 @@
+<!-- Appointments Page -->
+<div class="space-y-6">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">Appointments</h1>
+            <p class="text-sm text-gray-500 mt-0.5">Manage and track all salon appointments</p>
+        </div>
+        <button
+            class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white shadow-sm cursor-pointer"
+            style="background: linear-gradient(135deg, #be123c, #f43f5e);">
+            <i class="uil uil-plus"></i> New Appointment
+        </button>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="flex gap-2 flex-wrap">
+        <button *ngFor="let f of filters" (click)="setFilter(f)" [class]="activeFilter === f
+              ? 'bg-rose-600 text-white shadow-sm'
+              : 'bg-white text-gray-500 border border-gray-100 hover:border-rose-200 hover:text-rose-600'"
+            class="px-4 py-2 rounded-xl text-sm font-medium transition-all cursor-pointer">
+            {{ f }}
+            <span *ngIf="f === 'All'" class="ml-1.5 bg-white/20 rounded-full px-1.5 text-xs">{{ appointments.length
+                }}</span>
+        </button>
+    </div>
+
+    <!-- Table -->
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left">
+                <thead class="bg-gray-50/70">
+                    <tr>
+                        <th class="px-5 py-3.5 text-xs font-semibold text-gray-400 uppercase tracking-wider">ID</th>
+                        <th class="px-5 py-3.5 text-xs font-semibold text-gray-400 uppercase tracking-wider">Client</th>
+                        <th class="px-5 py-3.5 text-xs font-semibold text-gray-400 uppercase tracking-wider">Service
+                        </th>
+                        <th class="px-5 py-3.5 text-xs font-semibold text-gray-400 uppercase tracking-wider">Stylist
+                        </th>
+                        <th class="px-5 py-3.5 text-xs font-semibold text-gray-400 uppercase tracking-wider">Date & Time
+                        </th>
+                        <th class="px-5 py-3.5 text-xs font-semibold text-gray-400 uppercase tracking-wider">Price</th>
+                        <th class="px-5 py-3.5 text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
+                        <th class="px-5 py-3.5 text-xs font-semibold text-gray-400 uppercase tracking-wider">Actions
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-50">
+                    <tr *ngFor="let appt of filteredAppointments" class="hover:bg-rose-50/20 transition-colors">
+                        <td class="px-5 py-4 text-gray-400 text-xs font-mono">{{ appt.id }}</td>
+                        <td class="px-5 py-4">
+                            <div class="flex items-center gap-3">
+                                <div
+                                    class="w-8 h-8 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                                    {{ appt.client.charAt(0) }}
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-gray-800">{{ appt.client }}</p>
+                                    <p class="text-xs text-gray-400">{{ appt.phone }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-5 py-4">
+                            <p class="text-gray-700 font-medium">{{ appt.service }}</p>
+                            <p class="text-xs text-gray-400">{{ appt.duration }}</p>
+                        </td>
+                        <td class="px-5 py-4 text-gray-500">{{ appt.stylist }}</td>
+                        <td class="px-5 py-4">
+                            <p class="text-gray-700">{{ appt.date }}</p>
+                            <p class="text-xs text-gray-400">{{ appt.time }}</p>
+                        </td>
+                        <td class="px-5 py-4 font-semibold text-gray-800">{{ appt.price }}</td>
+                        <td class="px-5 py-4">
+                            <span
+                                [class]="'px-2.5 py-1 rounded-full text-xs font-semibold ' + getStatusClass(appt.status)">
+                                {{ appt.status }}
+                            </span>
+                        </td>
+                        <td class="px-5 py-4">
+                            <div class="flex items-center gap-2">
+                                <button
+                                    class="p-1.5 rounded-lg text-gray-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer transition-all">
+                                    <i class="uil uil-edit-alt text-base"></i>
+                                </button>
+                                <button
+                                    class="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 cursor-pointer transition-all">
+                                    <i class="uil uil-trash-alt text-base"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr *ngIf="filteredAppointments.length === 0">
+                        <td colspan="8" class="px-5 py-12 text-center text-gray-400">
+                            <i class="uil uil-calendar-slash text-4xl mb-2 block"></i>
+                            No appointments found for this filter.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

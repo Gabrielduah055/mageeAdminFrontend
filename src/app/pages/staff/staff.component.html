@@ -1,0 +1,76 @@
+<!-- Staff Page -->
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">Staff</h1>
+            <p class="text-sm text-gray-500 mt-0.5">Manage your salon team</p>
+        </div>
+        <button
+            class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white shadow-sm cursor-pointer"
+            style="background: linear-gradient(135deg, #be123c, #f43f5e);">
+            <i class="uil uil-user-plus"></i> Add Staff
+        </button>
+    </div>
+
+    <!-- Staff Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+        <div *ngFor="let member of staff"
+            class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all">
+
+            <!-- Card Top -->
+            <div class="p-6 flex items-center gap-4" style="background: linear-gradient(135deg, #fff1f2, #fff);">
+                <div
+                    class="w-16 h-16 rounded-2xl bg-rose-200 text-rose-700 flex items-center justify-center text-2xl font-bold flex-shrink-0">
+                    {{ member.name.charAt(0) }}
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-bold text-gray-900 truncate">{{ member.name }}</h3>
+                        <span
+                            [class]="'text-xs px-2.5 py-1 rounded-full font-semibold flex-shrink-0 ml-2 ' + getStatusClass(member.status)">{{
+                            member.status }}</span>
+                    </div>
+                    <p class="text-sm text-rose-500 font-medium">{{ member.role }}</p>
+                    <p class="text-xs text-gray-400 mt-0.5">{{ member.specialty }}</p>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="grid grid-cols-3 divide-x divide-gray-100 border-t border-gray-100">
+                <div class="py-4 text-center">
+                    <p class="text-lg font-bold text-gray-900">{{ member.rating }}</p>
+                    <p class="text-xs text-gray-400 flex items-center justify-center gap-0.5">
+                        <i class="uil uil-star text-amber-400"></i> Rating
+                    </p>
+                </div>
+                <div class="py-4 text-center">
+                    <p class="text-lg font-bold text-gray-900">{{ member.clients }}</p>
+                    <p class="text-xs text-gray-400">Clients</p>
+                </div>
+                <div class="py-4 text-center">
+                    <p class="text-lg font-bold text-gray-900">{{ member.todayBookings }}</p>
+                    <p class="text-xs text-gray-400">Today</p>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="px-6 py-4 border-t border-gray-50 flex items-center justify-between">
+                <div class="flex items-center gap-1.5 text-gray-400 text-xs">
+                    <i class="uil uil-clock text-sm"></i>
+                    {{ member.experience }}
+                </div>
+                <div class="flex gap-2">
+                    <button
+                        class="p-2 rounded-xl text-gray-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer transition-all">
+                        <i class="uil uil-phone text-base"></i>
+                    </button>
+                    <button
+                        class="p-2 rounded-xl text-gray-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer transition-all">
+                        <i class="uil uil-edit-alt text-base"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
