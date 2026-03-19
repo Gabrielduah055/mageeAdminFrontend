@@ -16,7 +16,7 @@ export class AdminLayoutComponent {
 
     navLinks = [
         { path: '/dashboard', icon: 'uil-apps', label: 'Dashboard' },
-        { path: '/appointments', icon: 'uil-calendar-alt', label: 'Appointments' },
+        { path: '/bookings', icon: 'uil-calendar-alt', label: 'Bookings' },
         { path: '/clients', icon: 'uil-users-alt', label: 'Clients' },
         { path: '/services', icon: 'uil-scissors', label: 'Services' },
         { path: '/staff', icon: 'uil-user-nurse', label: 'Staff' },

@@ -5,49 +5,66 @@
     <div class="flex items-center justify-between">
         <div>
             <h1 class="text-2xl font-bold text-gray-900">Clients</h1>
-            <p class="text-sm text-gray-500 mt-0.5">Manage your salon clientele</p>
+            <p class="text-sm text-gray-500 mt-0.5">Everyone who has booked or registered</p>
         </div>
-        <button
-            class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white shadow-sm cursor-pointer"
-            style="background: linear-gradient(135deg, #be123c, #f43f5e);">
-            <i class="uil uil-user-plus"></i> Add Client
-        </button>
+        <div class="flex items-center gap-2 bg-white border border-gray-100 rounded-xl px-4 py-2.5 text-sm text-gray-500 shadow-sm">
+            <i class="uil uil-users-alt text-rose-500"></i>
+            <span>{{ clients.length }} clients</span>
+        </div>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="errorMessage" class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm">
+        <i class="uil uil-exclamation-circle mr-2"></i>{{ errorMessage }}
     </div>
 
     <!-- Search Bar -->
     <div class="flex items-center gap-3 bg-white border border-gray-100 rounded-2xl px-4 py-3 shadow-sm max-w-md">
         <i class="uil uil-search text-gray-400 text-lg"></i>
-        <input type="text" (input)="onSearch($event)" placeholder="Search by name or phone..."
+        <input type="text" (input)="onSearch($event)" placeholder="Search by name or email..."
             class="bg-transparent text-sm outline-none text-gray-600 placeholder-gray-400 flex-1" />
     </div>
 
+    <!-- Loading Skeleton -->
+    <div *ngIf="isLoading" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div *ngFor="let i of [1,2,3,4,5,6]" class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 animate-pulse">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-12 h-12 bg-gray-200 rounded-2xl"></div>
+                <div class="flex-1 space-y-2">
+                    <div class="h-4 bg-gray-200 rounded w-24"></div>
+                    <div class="h-3 bg-gray-100 rounded w-32"></div>
+                </div>
+            </div>
+            <div class="h-12 bg-gray-100 rounded-xl"></div>
+        </div>
+    </div>
+
     <!-- Clients Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+    <div *ngIf="!isLoading" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         <div *ngFor="let client of filteredClients"
-            class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 hover:shadow-md hover:-translate-y-0.5 transition-all">
+            class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer"
+            (click)="openDetail(client)">
             <div class="flex items-start justify-between mb-4">
                 <div class="flex items-center gap-3">
-                    <div
-                        class="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center text-lg font-bold flex-shrink-0">
-                        {{ client.name.charAt(0) }}
+                    <div class="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center text-lg font-bold flex-shrink-0">
+                        {{ client.name.charAt(0).toUpperCase() }}
                     </div>
                     <div>
                         <p class="font-bold text-gray-900">{{ client.name }}</p>
-                        <p class="text-xs text-gray-400">{{ client.phone }}</p>
+                        <p class="text-xs text-gray-400">{{ client.email }}</p>
+                        <p *ngIf="client.phone" class="text-xs text-gray-400">{{ client.phone }}</p>
                     </div>
                 </div>
-                <span [class]="'px-2.5 py-1 rounded-full text-xs font-semibold ' + getStatusClass(client.status)">
-                    {{ client.status }}
-                </span>
+                <i class="uil uil-angle-right text-gray-300 text-xl mt-1"></i>
             </div>
 
             <div class="grid grid-cols-3 gap-2 pt-4 border-t border-gray-50">
                 <div class="text-center">
-                    <p class="text-lg font-bold text-gray-900">{{ client.visits }}</p>
-                    <p class="text-xs text-gray-400">Visits</p>
+                    <p class="text-lg font-bold text-gray-900">{{ client.bookingCount }}</p>
+                    <p class="text-xs text-gray-400">Bookings</p>
                 </div>
                 <div class="text-center border-x border-gray-50">
-                    <p class="text-sm font-bold text-gray-900">{{ client.totalSpent }}</p>
+                    <p class="text-sm font-bold text-gray-900 truncate">{{ client.totalSpent }}</p>
                     <p class="text-xs text-gray-400">Spent</p>
                 </div>
                 <div class="text-center">
@@ -55,24 +72,115 @@
                     <p class="text-xs text-gray-400">Last Visit</p>
                 </div>
             </div>
-
-            <div class="flex gap-2 mt-4">
-                <button
-                    class="flex-1 flex items-center justify-center gap-1 py-2 rounded-xl text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 cursor-pointer transition-all">
-                    <i class="uil uil-calendar-alt"></i> Book
-                </button>
-                <button
-                    class="flex-1 flex items-center justify-center gap-1 py-2 rounded-xl text-xs font-semibold text-gray-500 bg-gray-50 hover:bg-gray-100 cursor-pointer transition-all">
-                    <i class="uil uil-phone"></i> Call
-                </button>
-            </div>
         </div>
     </div>
 
     <!-- Empty state -->
-    <div *ngIf="filteredClients.length === 0" class="text-center py-16 text-gray-400">
+    <div *ngIf="!isLoading && filteredClients.length === 0" class="text-center py-16 text-gray-400">
         <i class="uil uil-user-times text-5xl mb-3 block"></i>
         <p class="font-semibold">No clients found</p>
         <p class="text-sm mt-1">Try a different search term</p>
+    </div>
+</div>
+
+<!-- Client Detail Slide-over Panel -->
+<div *ngIf="selectedClient"
+    class="fixed inset-0 z-50 flex justify-end"
+    (click)="closeDetail()">
+    <div class="absolute inset-0 bg-black/30 backdrop-blur-sm"></div>
+    <div class="relative w-full max-w-lg bg-white h-full shadow-2xl flex flex-col overflow-hidden"
+        (click)="$event.stopPropagation()">
+
+        <!-- Panel Header -->
+        <div class="p-6 border-b border-gray-100 flex items-center justify-between"
+            style="background: linear-gradient(135deg, #fff1f2, #fff);">
+            <div class="flex items-center gap-4">
+                <div class="w-14 h-14 rounded-2xl bg-rose-200 text-rose-700 flex items-center justify-center text-2xl font-bold">
+                    {{ selectedClient.name.charAt(0).toUpperCase() }}
+                </div>
+                <div>
+                    <h2 class="font-bold text-gray-900 text-lg">{{ selectedClient.name }}</h2>
+                    <p class="text-sm text-gray-400">{{ selectedClient.email }}</p>
+                </div>
+            </div>
+            <button (click)="closeDetail()"
+                class="p-2 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 cursor-pointer transition-all">
+                <i class="uil uil-times text-xl"></i>
+            </button>
+        </div>
+
+        <!-- Panel Body -->
+        <div class="flex-1 overflow-y-auto p-6 space-y-6">
+
+            <!-- Loading -->
+            <div *ngIf="loadingDetail" class="space-y-4 animate-pulse">
+                <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+                <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                <div class="h-20 bg-gray-100 rounded-xl"></div>
+            </div>
+
+            <ng-container *ngIf="!loadingDetail && clientDetail">
+
+                <!-- Stats -->
+                <div class="grid grid-cols-3 gap-3">
+                    <div class="bg-rose-50 rounded-xl p-3 text-center">
+                        <p class="text-xl font-bold text-rose-600">{{ clientDetail.bookingCount }}</p>
+                        <p class="text-xs text-gray-500 mt-0.5">Bookings</p>
+                    </div>
+                    <div class="bg-emerald-50 rounded-xl p-3 text-center">
+                        <p class="text-sm font-bold text-emerald-600">{{ clientDetail.totalSpent }}</p>
+                        <p class="text-xs text-gray-500 mt-0.5">Total Spent</p>
+                    </div>
+                    <div class="bg-amber-50 rounded-xl p-3 text-center">
+                        <p class="text-xs font-bold text-amber-600">{{ clientDetail.lastVisit }}</p>
+                        <p class="text-xs text-gray-500 mt-0.5">Last Visit</p>
+                    </div>
+                </div>
+
+                <!-- Client Info -->
+                <div class="bg-gray-50 rounded-xl p-4 space-y-2">
+                    <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Contact</h3>
+                    <div class="flex items-center gap-2 text-sm text-gray-600">
+                        <i class="uil uil-envelope text-rose-400"></i>
+                        <span>{{ clientDetail.email }}</span>
+                    </div>
+                    <div *ngIf="clientDetail.phone" class="flex items-center gap-2 text-sm text-gray-600">
+                        <i class="uil uil-phone text-rose-400"></i>
+                        <span>{{ clientDetail.phone }}</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-sm text-gray-600">
+                        <i class="uil uil-calendar-alt text-rose-400"></i>
+                        <span>Joined {{ clientDetail.joinedAt | date:'mediumDate' }}</span>
+                    </div>
+                </div>
+
+                <!-- Booking History -->
+                <div>
+                    <h3 class="text-sm font-bold text-gray-800 mb-3">Booking History</h3>
+                    <div *ngIf="clientBookings.length === 0" class="text-center py-8 text-gray-400">
+                        <i class="uil uil-calendar-slash text-3xl mb-2 block"></i>
+                        <p class="text-sm">No bookings yet</p>
+                    </div>
+                    <div class="space-y-2">
+                        <div *ngFor="let b of clientBookings"
+                            class="bg-white border border-gray-100 rounded-xl p-4 hover:shadow-sm transition-all">
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <p class="font-semibold text-gray-800 text-sm">{{ b.service }}</p>
+                                    <p class="text-xs text-gray-400 mt-0.5">{{ b.date }} at {{ b.time }}</p>
+                                    <span class="text-xs text-gray-400 capitalize">{{ b.serviceType }} service</span>
+                                </div>
+                                <div class="text-right">
+                                    <span [class]="'px-2.5 py-1 rounded-full text-xs font-semibold block mb-1 ' + getStatusClass(b.status)">
+                                        {{ b.status }}
+                                    </span>
+                                    <p class="text-xs font-semibold text-rose-600">{{ b.price }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </ng-container>
+        </div>
     </div>
 </div>

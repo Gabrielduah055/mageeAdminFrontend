@@ -1,32 +1,63 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ServiceService } from '../../core/services/service.service';
 
 @Component({
     selector: 'app-services',
     standalone: true,
-    imports: [CommonModule],
+    imports: [CommonModule, ReactiveFormsModule],
     templateUrl: './services.component.html',
     styleUrl: './services.component.css'
 })
-export class ServicesComponent {
+export class ServicesComponent implements OnInit {
 
-    categories = ['All', 'Braiding', 'Relaxer', 'Natural', 'Color', 'Treatment'];
+    categories: string[] = ['All'];
     activeCategory = 'All';
+    services: any[] = [];
+    isLoading = true;
+    errorMessage = '';
 
-    services = [
-        { name: 'Box Braids', category: 'Braiding', duration: '3-4 hrs', price: 'GH₵ 150–250', icon: 'uil-comment-alt-lines', popular: true },
-        { name: 'Ghana Weaving', category: 'Braiding', duration: '2-3 hrs', price: 'GH₵ 120–180', icon: 'uil-wind', popular: true },
-        { name: 'Knotless Braids', category: 'Braiding', duration: '4-5 hrs', price: 'GH₵ 200–300', icon: 'uil-layers', popular: false },
-        { name: 'Hair Relaxer', category: 'Relaxer', duration: '1.5-2 hrs', price: 'GH₵ 100–140', icon: 'uil-flask', popular: true },
-        { name: 'Touch-up Relaxer', category: 'Relaxer', duration: '1-1.5 hrs', price: 'GH₵ 80–100', icon: 'uil-flask', popular: false },
-        { name: 'Trim & Style', category: 'Natural', duration: '1-1.5 hrs', price: 'GH₵ 60–90', icon: 'uil-scissors', popular: false },
-        { name: 'Dreadlocks', category: 'Natural', duration: '4-6 hrs', price: 'GH₵ 200–350', icon: 'uil-layers', popular: true },
-        { name: 'Locs Retouch', category: 'Natural', duration: '1.5-2 hrs', price: 'GH₵ 100–130', icon: 'uil-sync', popular: false },
-        { name: 'Full Hair Coloring', category: 'Color', duration: '2-3 hrs', price: 'GH₵ 180–280', icon: 'uil-palette', popular: true },
-        { name: 'Highlights', category: 'Color', duration: '2-2.5 hrs', price: 'GH₵ 150–220', icon: 'uil-paint-tool', popular: false },
-        { name: 'Deep Conditioning', category: 'Treatment', duration: '1 hr', price: 'GH₵ 60–80', icon: 'uil-tint', popular: false },
-        { name: 'Washday Package', category: 'Treatment', duration: '1-1.5 hrs', price: 'GH₵ 50–70', icon: 'uil-droplet', popular: false },
-    ];
+    showModal = false;
+    editingService: any = null;
+    isSaving = false;
+    deletingId: string | null = null;
+
+    serviceForm: FormGroup;
+
+    constructor(
+        private serviceService: ServiceService,
+        private fb: FormBuilder
+    ) {
+        this.serviceForm = this.fb.group({
+            name: ['', Validators.required],
+            category: [''],
+            price: ['', [Validators.required, Validators.min(0)]],
+            duration_minutes: ['', [Validators.required, Validators.min(1)]],
+            description: [''],
+        });
+    }
+
+    ngOnInit(): void {
+        this.loadServices();
+    }
+
+    loadServices(): void {
+        this.isLoading = true;
+        this.serviceService.getServices().subscribe({
+            next: (data) => {
+                this.services = data || [];
+                const cats = Array.from(new Set(this.services.map(s => s.category).filter(Boolean)));
+                this.categories = ['All', ...cats];
+                this.isLoading = false;
+            },
+            error: (err) => {
+                console.error('Error fetching services', err);
+                this.errorMessage = 'Failed to load services.';
+                this.isLoading = false;
+            }
+        });
+    }
 
     get filteredServices() {
         if (this.activeCategory === 'All') return this.services;
@@ -34,4 +65,76 @@ export class ServicesComponent {
     }
 
     setCategory(cat: string) { this.activeCategory = cat; }
+
+    openAddModal(): void {
+        this.editingService = null;
+        this.serviceForm.reset({ name: '', category: '', price: '', duration_minutes: '', description: '' });
+        this.showModal = true;
+    }
+
+    openEditModal(svc: any): void {
+        this.editingService = svc;
+        this.serviceForm.patchValue({
+            name: svc.name,
+            category: svc.category ?? '',
+            price: svc.price,
+            duration_minutes: svc.duration_minutes,
+            description: svc.description ?? '',
+        });
+        this.showModal = true;
+    }
+
+    closeModal(): void {
+        this.showModal = false;
+        this.editingService = null;
+    }
+
+    saveService(): void {
+        if (this.serviceForm.invalid) return;
+        this.isSaving = true;
+        const payload = { ...this.serviceForm.value };
+
+        if (this.editingService) {
+            this.serviceService.updateService(this.editingService._id, payload).subscribe({
+                next: (updated) => {
+                    const idx = this.services.findIndex(s => s._id === this.editingService._id);
+                    if (idx !== -1) this.services[idx] = updated;
+                    this.isSaving = false;
+                    this.closeModal();
+                    this.loadServices();
+                },
+                error: () => { this.isSaving = false; }
+            });
+        } else {
+            this.serviceService.createService(payload).subscribe({
+                next: () => {
+                    this.isSaving = false;
+                    this.closeModal();
+                    this.loadServices();
+                },
+                error: () => { this.isSaving = false; }
+            });
+        }
+    }
+
+    deleteService(svc: any): void {
+        if (!confirm(`Remove "${svc.name}"?`)) return;
+        this.deletingId = svc._id;
+        this.serviceService.deleteService(svc._id).subscribe({
+            next: () => {
+                this.services = this.services.filter(s => s._id !== svc._id);
+                this.deletingId = null;
+                this.loadServices();
+            },
+            error: () => { this.deletingId = null; }
+        });
+    }
+
+    formatDuration(mins: number): string {
+        if (!mins) return '';
+        if (mins < 60) return `${mins} min`;
+        const h = Math.floor(mins / 60);
+        const m = mins % 60;
+        return m > 0 ? `${h}h ${m}min` : `${h}h`;
+    }
 }
