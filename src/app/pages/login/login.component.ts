@@ -34,18 +34,32 @@ export class LoginComponent {
 
     onSubmit(): void {
         if (this.loginForm.invalid) return;
+
         this.isLoading = true;
         this.errorMessage = '';
 
-        setTimeout(() => {
-            const { email, password } = this.loginForm.value;
-            const success = this.authService.login(email, password);
-            if (success) {
+        const {email, password} = this.loginForm.value;
+
+        //create credentials object
+        const credentials = { 
+            email: email, 
+            password: password,
+            token:'' };
+
+      this.authService.login(credentials).subscribe({
+        next: (success) => {
+            this.isLoading = false;
+            if(success) {
                 this.router.navigate(['/dashboard']);
             } else {
-                this.errorMessage = 'Invalid credentials. Please try again.';
+                this.errorMessage = 'Invalid email or password';
             }
+        },
+        error: (error) => {
             this.isLoading = false;
-        }, 900);
+            this.errorMessage = error.error?.message || 'An error occurred during login. Please try again.';
+            console.error('Login error:', error);
+        }
+      });
     }
 }

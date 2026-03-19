@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { DashboardService } from '../../core/services/dashboard.service';
 
 @Component({
     selector: 'app-dashboard',
@@ -9,66 +10,53 @@ import { RouterLink } from '@angular/router';
     templateUrl: './dashboard.component.html',
     styleUrls: ['./dashboard.component.css']
 })
-export class DashboardComponent {
+export class DashboardComponent implements OnInit {
 
-    stats = [
-        {
-            label: "Today's Appointments",
-            value: '12',
-            change: '+3 from yesterday',
-            positive: true,
-            icon: 'uil-calendar-alt',
-            color: 'rose',
-            bg: 'bg-rose-50',
-            text: 'text-rose-600'
-        },
-        {
-            label: 'Total Clients',
-            value: '348',
-            change: '+12 this month',
-            positive: true,
-            icon: 'uil-users-alt',
-            color: 'amber',
-            bg: 'bg-amber-50',
-            text: 'text-amber-600'
-        },
-        {
-            label: 'Revenue (Month)',
-            value: 'GH₵ 4,280',
-            change: '+8% from last month',
-            positive: true,
-            icon: 'uil-money-bill',
-            color: 'emerald',
-            bg: 'bg-emerald-50',
-            text: 'text-emerald-600'
-        },
-        {
-            label: 'Active Services',
-            value: '24',
-            change: '2 added recently',
-            positive: true,
-            icon: 'uil-scissors',
-            color: 'purple',
-            bg: 'bg-purple-50',
-            text: 'text-purple-600'
-        }
+    stats: any[] = [
+        { label: "Today's Bookings", value: '--', change: '', positive: true, icon: 'uil-calendar-alt', bg: 'bg-rose-50', text: 'text-rose-600' },
+        { label: 'Total Clients', value: '--', change: '', positive: true, icon: 'uil-users-alt', bg: 'bg-amber-50', text: 'text-amber-600' },
+        { label: 'Revenue (Month)', value: '--', change: '', positive: true, icon: 'uil-money-bill', bg: 'bg-emerald-50', text: 'text-emerald-600' },
+        { label: 'Active Services', value: '--', change: '', positive: true, icon: 'uil-scissors', bg: 'bg-purple-50', text: 'text-purple-600' }
     ];
+    recentBookings: any[] = [];
+    topServices: any[] = [];
+    isLoading = true;
+    errorMessage = '';
 
-    recentAppointments = [
-        { client: 'Abena Mensah', service: 'Box Braids', stylist: 'Akosua', time: '9:00 AM', status: 'Confirmed' },
-        { client: 'Yaa Asantewaa', service: 'Hair Relaxer', stylist: 'Ama', time: '10:30 AM', status: 'Completed' },
-        { client: 'Adwoa Boateng', service: 'Ghana Weaving', stylist: 'Akosua', time: '12:00 PM', status: 'Pending' },
-        { client: 'Efua Darko', service: 'Dreadlocks', stylist: 'Ama', time: '2:00 PM', status: 'Confirmed' },
-        { client: 'Maame Frimpong', service: 'Hair Coloring', stylist: 'Adjoa', time: '3:30 PM', status: 'Cancelled' },
-    ];
+    constructor(private dashboardService: DashboardService) {}
 
-    topServices = [
-        { name: 'Box Braids', bookings: 48, icon: 'uil-comment-alt-lines', color: 'rose' },
-        { name: 'Ghana Weaving', bookings: 35, icon: 'uil-wind', color: 'amber' },
-        { name: 'Hair Relaxer', bookings: 29, icon: 'uil-flask', color: 'emerald' },
-        { name: 'Dreadlocks', bookings: 22, icon: 'uil-layers', color: 'purple' },
-        { name: 'Hair Coloring', bookings: 18, icon: 'uil-palette', color: 'sky' },
-    ];
+    ngOnInit(): void {
+        this.dashboardService.getDashboardStats().subscribe({
+            next: (data) => {
+                if (data) {
+                    this.stats = [
+                        { label: "Today's Bookings", value: data.todayBookings ?? '--', change: 'bookings today', positive: true, icon: 'uil-calendar-alt', bg: 'bg-rose-50', text: 'text-rose-600' },
+                        { label: 'Total Clients', value: data.totalClients ?? '--', change: 'registered clients', positive: true, icon: 'uil-users-alt', bg: 'bg-amber-50', text: 'text-amber-600' },
+                        { label: 'Revenue (Month)', value: data.monthRevenue ?? '--', change: 'this month', positive: true, icon: 'uil-money-bill', bg: 'bg-emerald-50', text: 'text-emerald-600' },
+                        { label: 'Active Services', value: data.activeServices ?? '--', change: 'services available', positive: true, icon: 'uil-scissors', bg: 'bg-purple-50', text: 'text-purple-600' }
+                    ];
+                    this.recentBookings = (data.recentBookings ?? []).map((b: any) => ({
+                        client: b.client ?? b.user?.name ?? 'Unknown',
+                        service: b.service ?? b.service?.name ?? 'Unknown',
+                        time: b.time ?? b.booking_time ?? '',
+                        date: b.date ?? b.booking_date ?? '',
+                        status: this.capitalizeFirst(b.status ?? 'pending'),
+                    }));
+                    this.topServices = data.topServices ?? [];
+                }
+                this.isLoading = false;
+            },
+            error: (err) => {
+                console.error('Error fetching dashboard data', err);
+                this.errorMessage = 'Failed to load dashboard data.';
+                this.isLoading = false;
+            }
+        });
+    }
+
+    capitalizeFirst(s: string): string {
+        return s.charAt(0).toUpperCase() + s.slice(1);
+    }
 
     getStatusClass(status: string): string {
         switch (status) {

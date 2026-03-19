@@ -1,76 +1,171 @@
 <!-- Staff Page -->
 <div class="space-y-6">
+
     <!-- Header -->
     <div class="flex items-center justify-between">
         <div>
             <h1 class="text-2xl font-bold text-gray-900">Staff</h1>
             <p class="text-sm text-gray-500 mt-0.5">Manage your salon team</p>
         </div>
-        <button
+        <button (click)="openAddModal()"
             class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white shadow-sm cursor-pointer"
             style="background: linear-gradient(135deg, #be123c, #f43f5e);">
             <i class="uil uil-user-plus"></i> Add Staff
         </button>
     </div>
 
+    <!-- Error State -->
+    <div *ngIf="errorMessage" class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm">
+        <i class="uil uil-exclamation-circle mr-2"></i>{{ errorMessage }}
+    </div>
+
+    <!-- Loading Skeleton -->
+    <div *ngIf="isLoading" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+        <div *ngFor="let i of [1,2,3]" class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden animate-pulse">
+            <div class="p-6 flex items-center gap-4 bg-gray-50">
+                <div class="w-16 h-16 bg-gray-200 rounded-2xl"></div>
+                <div class="flex-1 space-y-2">
+                    <div class="h-4 bg-gray-200 rounded w-24"></div>
+                    <div class="h-3 bg-gray-100 rounded w-16"></div>
+                </div>
+            </div>
+            <div class="h-16 bg-gray-50"></div>
+        </div>
+    </div>
+
     <!-- Staff Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+    <div *ngIf="!isLoading" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
         <div *ngFor="let member of staff"
             class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all">
 
             <!-- Card Top -->
             <div class="p-6 flex items-center gap-4" style="background: linear-gradient(135deg, #fff1f2, #fff);">
-                <div
-                    class="w-16 h-16 rounded-2xl bg-rose-200 text-rose-700 flex items-center justify-center text-2xl font-bold flex-shrink-0">
-                    {{ member.name.charAt(0) }}
+                <div class="w-16 h-16 rounded-2xl bg-rose-200 text-rose-700 flex items-center justify-center text-2xl font-bold flex-shrink-0">
+                    {{ member.name.charAt(0).toUpperCase() }}
                 </div>
                 <div class="flex-1 min-w-0">
                     <div class="flex items-center justify-between">
                         <h3 class="font-bold text-gray-900 truncate">{{ member.name }}</h3>
-                        <span
-                            [class]="'text-xs px-2.5 py-1 rounded-full font-semibold flex-shrink-0 ml-2 ' + getStatusClass(member.status)">{{
-                            member.status }}</span>
+                        <span [class]="'text-xs px-2.5 py-1 rounded-full font-semibold flex-shrink-0 ml-2 ' + getStatusClass(member.status)">
+                            {{ member.status }}
+                        </span>
                     </div>
                     <p class="text-sm text-rose-500 font-medium">{{ member.role }}</p>
-                    <p class="text-xs text-gray-400 mt-0.5">{{ member.specialty }}</p>
+                    <p *ngIf="member.specialty" class="text-xs text-gray-400 mt-0.5">{{ member.specialty }}</p>
                 </div>
             </div>
 
-            <!-- Stats -->
-            <div class="grid grid-cols-3 divide-x divide-gray-100 border-t border-gray-100">
-                <div class="py-4 text-center">
-                    <p class="text-lg font-bold text-gray-900">{{ member.rating }}</p>
-                    <p class="text-xs text-gray-400 flex items-center justify-center gap-0.5">
-                        <i class="uil uil-star text-amber-400"></i> Rating
-                    </p>
+            <!-- Contact Info -->
+            <div *ngIf="member.phone || member.email" class="px-6 py-3 bg-gray-50/50 border-t border-gray-100 space-y-1">
+                <div *ngIf="member.phone" class="flex items-center gap-2 text-xs text-gray-500">
+                    <i class="uil uil-phone text-rose-400"></i> {{ member.phone }}
                 </div>
-                <div class="py-4 text-center">
-                    <p class="text-lg font-bold text-gray-900">{{ member.clients }}</p>
-                    <p class="text-xs text-gray-400">Clients</p>
-                </div>
-                <div class="py-4 text-center">
-                    <p class="text-lg font-bold text-gray-900">{{ member.todayBookings }}</p>
-                    <p class="text-xs text-gray-400">Today</p>
+                <div *ngIf="member.email" class="flex items-center gap-2 text-xs text-gray-500">
+                    <i class="uil uil-envelope text-rose-400"></i> {{ member.email }}
                 </div>
             </div>
 
             <!-- Footer -->
-            <div class="px-6 py-4 border-t border-gray-50 flex items-center justify-between">
+            <div class="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
                 <div class="flex items-center gap-1.5 text-gray-400 text-xs">
                     <i class="uil uil-clock text-sm"></i>
-                    {{ member.experience }}
+                    {{ member.experience || 'Experience not set' }}
                 </div>
                 <div class="flex gap-2">
-                    <button
-                        class="p-2 rounded-xl text-gray-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer transition-all">
-                        <i class="uil uil-phone text-base"></i>
-                    </button>
-                    <button
+                    <button (click)="openEditModal(member)"
                         class="p-2 rounded-xl text-gray-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer transition-all">
                         <i class="uil uil-edit-alt text-base"></i>
+                    </button>
+                    <button (click)="deleteStaff(member)" [disabled]="deletingId === member._id"
+                        class="p-2 rounded-xl text-gray-400 hover:text-red-500 hover:bg-red-50 cursor-pointer transition-all disabled:opacity-50">
+                        <i class="uil uil-trash-alt text-base"></i>
                     </button>
                 </div>
             </div>
         </div>
+
+        <!-- Empty State -->
+        <div *ngIf="staff.length === 0" class="col-span-full text-center py-16 text-gray-400">
+            <i class="uil uil-user-times text-5xl mb-3 block"></i>
+            <p class="font-semibold">No staff members yet</p>
+            <p class="text-sm mt-1">Click "Add Staff" to add your first team member</p>
+        </div>
+    </div>
+</div>
+
+<!-- Add / Edit Staff Modal -->
+<div *ngIf="showModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" (click)="closeModal()">
+    <div class="absolute inset-0 bg-black/30 backdrop-blur-sm"></div>
+    <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden" (click)="$event.stopPropagation()">
+
+        <!-- Modal Header -->
+        <div class="p-6 border-b border-gray-100 flex items-center justify-between"
+            style="background: linear-gradient(135deg, #fff1f2, #fff);">
+            <div>
+                <h2 class="font-bold text-gray-900">{{ editingMember ? 'Edit Staff Member' : 'Add Staff Member' }}</h2>
+                <p class="text-xs text-gray-400 mt-0.5">{{ editingMember ? 'Update details' : 'Add a new team member' }}</p>
+            </div>
+            <button (click)="closeModal()"
+                class="p-2 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 cursor-pointer transition-all">
+                <i class="uil uil-times text-xl"></i>
+            </button>
+        </div>
+
+        <!-- Modal Form -->
+        <form [formGroup]="staffForm" (ngSubmit)="saveStaff()" class="p-6 space-y-4">
+            <div class="grid grid-cols-2 gap-3">
+                <div class="col-span-2">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Full Name <span class="text-rose-500">*</span></label>
+                    <input formControlName="name" type="text" placeholder="e.g. Akosua Mensah"
+                        class="w-full px-4 py-3 border-2 border-gray-100 rounded-xl text-sm bg-gray-50 focus:bg-white focus:border-rose-400 focus:outline-none focus:ring-4 focus:ring-rose-50 transition-all" />
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Role <span class="text-rose-500">*</span></label>
+                    <input formControlName="role" type="text" placeholder="e.g. Stylist"
+                        class="w-full px-4 py-3 border-2 border-gray-100 rounded-xl text-sm bg-gray-50 focus:bg-white focus:border-rose-400 focus:outline-none focus:ring-4 focus:ring-rose-50 transition-all" />
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Status</label>
+                    <select formControlName="status"
+                        class="w-full px-4 py-3 border-2 border-gray-100 rounded-xl text-sm bg-gray-50 focus:bg-white focus:border-rose-400 focus:outline-none focus:ring-4 focus:ring-rose-50 transition-all">
+                        <option value="Available">Available</option>
+                        <option value="Busy">Busy</option>
+                    </select>
+                </div>
+                <div class="col-span-2">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Specialty</label>
+                    <input formControlName="specialty" type="text" placeholder="e.g. Braiding, Locs"
+                        class="w-full px-4 py-3 border-2 border-gray-100 rounded-xl text-sm bg-gray-50 focus:bg-white focus:border-rose-400 focus:outline-none focus:ring-4 focus:ring-rose-50 transition-all" />
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Phone</label>
+                    <input formControlName="phone" type="text" placeholder="0XX XXX XXXX"
+                        class="w-full px-4 py-3 border-2 border-gray-100 rounded-xl text-sm bg-gray-50 focus:bg-white focus:border-rose-400 focus:outline-none focus:ring-4 focus:ring-rose-50 transition-all" />
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Email</label>
+                    <input formControlName="email" type="email" placeholder="staff@email.com"
+                        class="w-full px-4 py-3 border-2 border-gray-100 rounded-xl text-sm bg-gray-50 focus:bg-white focus:border-rose-400 focus:outline-none focus:ring-4 focus:ring-rose-50 transition-all" />
+                </div>
+                <div class="col-span-2">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Experience</label>
+                    <input formControlName="experience" type="text" placeholder="e.g. 3 years"
+                        class="w-full px-4 py-3 border-2 border-gray-100 rounded-xl text-sm bg-gray-50 focus:bg-white focus:border-rose-400 focus:outline-none focus:ring-4 focus:ring-rose-50 transition-all" />
+                </div>
+            </div>
+
+            <div class="flex gap-3 pt-2">
+                <button type="button" (click)="closeModal()"
+                    class="flex-1 py-2.5 rounded-xl text-sm font-semibold text-gray-500 bg-gray-100 hover:bg-gray-200 cursor-pointer transition-all">
+                    Cancel
+                </button>
+                <button type="submit" [disabled]="staffForm.invalid || isSaving"
+                    class="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold text-white cursor-pointer shadow-sm disabled:opacity-60 transition-all"
+                    style="background: linear-gradient(135deg, #be123c, #f43f5e);">
+                    <i class="uil uil-check"></i>
+                    {{ isSaving ? 'Saving...' : (editingMember ? 'Save Changes' : 'Add Member') }}
+                </button>
+            </div>
+        </form>
     </div>
 </div>
